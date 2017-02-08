@@ -180,31 +180,8 @@ class AES_GCM:
         return plaintext
 
 
-if __name__ == '__main__':
-    import os
-    plaintext = b'\xd9\x31\x32\x25\xf8\x84\x06\xe5' + \
-                b'\xa5\x59\x09\xc5\xaf\xf5\x26\x9a' + \
-                b'\x86\xa7\xa9\x53\x15\x34\xf7\xda' + \
-                b'\x2e\x4c\x30\x3d\x8a\x31\x8a\x72' + \
-                b'\x1c\x3c\x0c\x95\x95\x68\x09\x53' + \
-                b'\x2f\xcf\x0e\x24\x49\xa6\xb5\x25' + \
-                b'\xb1\x6a\xed\xf5\xaa\x0d\xe6\x57' + \
-                b'\xba\x63\x7b\x39'
-    init_value = 0xcafebabefacedbaddecaf888
+# ciphertext, authtag = my_gcm.encrypt(IV, plaintext, assoc_data)
+# plaintext = my_gcm.decrypt(IV, ciphertext, authtag, assoc_data)
 
-    my_gcm = AES_GCM(os.urandom(32))
-    encrypted, new_tag = my_gcm.encrypt(init_value, plaintext)
-
-    try:
-        decrypted = my_gcm.decrypt(init_value, encrypted, new_tag + 1)
-    except InvalidTagException as e:
-        print e
-        decrypted = my_gcm.decrypt(init_value, encrypted, new_tag)
-        print('decrypted:', hex(bytes_to_long(decrypted)))
-
-
-    # ciphertext, authtag = my_gcm.encrypt(IV, plaintext, assoc_data)
-    # plaintext = my_gcm.decrypt(IV, ciphertext, authtag, assoc_data)
-
-    # decrypt() raises InvalidTagException on validation failure
+# decrypt() raises InvalidTagException on validation failure
 
