@@ -149,9 +149,9 @@ class AES_GCM:
 
     def decrypt(self, init_value, ciphertext, auth_tag, auth_data=b''):
         if init_value >= (1 << 96):
-            raise InvalidInputException('IV should be 96-bit')
+            raise InvalidInputException('IV should be 96-bit long type')
         if auth_tag >= (1 << 128):
-            raise InvalidInputException('Tag should be 128-bit')
+            raise InvalidInputException('Tag should be 128-bit long type')
 
         if auth_tag != self.__ghash(auth_data, ciphertext) ^ \
                 bytes_to_long(self.__aes_ecb.encrypt(
@@ -190,20 +190,21 @@ if __name__ == '__main__':
                 b'\x2f\xcf\x0e\x24\x49\xa6\xb5\x25' + \
                 b'\xb1\x6a\xed\xf5\xaa\x0d\xe6\x57' + \
                 b'\xba\x63\x7b\x39'
-    # auth_data = b'\xfe\xed\xfa\xce\xde\xad\xbe\xef' + \
-    #             b'\xfe\xed\xfa\xce\xde\xad\xbe\xef' + \
-    #             b'\xab\xad\xda\xd2'
-    auth_data = ""
     init_value = 0xcafebabefacedbaddecaf888
 
     my_gcm = AES_GCM(os.urandom(32))
     encrypted, new_tag = my_gcm.encrypt(init_value, plaintext)
 
     try:
-        decrypted = my_gcm.decrypt(init_value, encrypted,
-                new_tag + 1, auth_data)
+        decrypted = my_gcm.decrypt(init_value, encrypted, new_tag + 1)
     except InvalidTagException as e:
         print e
         decrypted = my_gcm.decrypt(init_value, encrypted, new_tag)
         print('decrypted:', hex(bytes_to_long(decrypted)))
+
+
+    # ciphertext, authtag = my_gcm.encrypt(IV, plaintext, assoc_data)
+    # plaintext = my_gcm.decrypt(IV, ciphertext, authtag, assoc_data)
+
+    # decrypt() raises InvalidTagException on validation failure
 
