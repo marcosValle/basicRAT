@@ -6,8 +6,10 @@
 #
 
 import os
+import socket
 from Crypto.Hash import SHA256
 from Crypto.Util.number import bytes_to_long, long_to_bytes
+from aes_gcm import *
 
 FB_KEY = '82e672ae054aa4de6f042c888111686a'
 # generate your own key with...
@@ -49,3 +51,32 @@ def diffiehellman(sock, server=True, bits=2048):
 
     s = pow(b, a, p)
     return SHA256.new(long_to_bytes(s)).digest()
+
+# take plaintext
+# encrypt using GCM object
+# and send over sock
+def sendGCM(sock, GCM_obj, IV, plaintext):
+    ciphertext, tag = GCM_obj.encrypt(IV, plaintext)
+    return sock.send(long_to_bytes(IV, 12) + ciphertext + long_to_bytes(tag, 16))
+
+# read data from sock
+# decrypt uising gcm object
+# return plaintext
+# WARNING: gcm.decrypt throws InvalidTagException upon tampered/corrupted
+# this will need to be handled outside of this function
+def recvGCM(sock, GCM_obj):
+    m = ""
+    while(1):
+        try:
+            m += sock.recv(4096)
+        except socket.error:
+            break
+
+    # prevents decryption of empty string
+    if not m: return m
+
+    IV = bytes_to_long(m[:12])
+    ciphertext = m[12:-16]
+    tag = bytes_to_long(m[-16:])
+
+    return GCM_obj.decrypt(IV, ciphertext, tag)
